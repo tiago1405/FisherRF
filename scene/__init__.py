@@ -134,3 +134,26 @@ class Scene:
 
             self.all_train_set.update([base_idx + i for i, _ in enumerate(load_idxs)])
             self.train_cameras[scale].extend(inflated_cams)
+
+    def add_camera(self, camera, scale=1.0):
+        """
+        Add a new camera to the scene's training set.
+        
+        Args:
+            camera: Camera object to add
+            scale: Resolution scale (default: 1.0)
+            
+        Returns:
+            int: Index of added camera
+            
+        Raises:
+            ValueError: If scale not in camera dictionary
+        """
+        if scale not in self.train_cameras:
+            raise ValueError(f"Scale {scale} not found in camera dictionary")
+            
+        idx = len(self.train_cameras[scale])
+        self.train_cameras[scale].append(camera)
+        self.all_train_set.add(idx)
+        self.train_idxs.append(idx)  # Add to current training set
+        return idx
