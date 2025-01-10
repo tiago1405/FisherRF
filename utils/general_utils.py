@@ -19,6 +19,17 @@ def inverse_sigmoid(x):
     return torch.log(x/(1-x))
 
 def PILtoTorch(pil_image, resolution):
+    if isinstance(resolution, (tuple, list)):
+        new_w = max(1, int(resolution[0]))
+        new_h = max(1, int(resolution[1]))
+        resolution = (new_w, new_h)
+    elif isinstance(resolution, (int, float)):
+        w, h = pil_image.size
+        scale = float(resolution)
+        new_w = max(1, int(w * scale))
+        new_h = max(1, int(h * scale))
+        resolution = (new_w, new_h)
+
     resized_image_PIL = pil_image.resize(resolution)
     resized_image = torch.from_numpy(np.array(resized_image_PIL)) / 255.0
     if len(resized_image.shape) == 3:
