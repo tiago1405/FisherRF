@@ -19,6 +19,8 @@ from arguments import ModelParams
 from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON, load_cam_info
 from tqdm import tqdm
 
+import numpy as np
+
 class Scene:
 
     gaussians : GaussianModel
@@ -157,3 +159,16 @@ class Scene:
         self.all_train_set.add(idx)
         self.train_idxs.append(idx)  # Add to current training set
         return idx
+
+    def update_training_cameras(self, indices):
+        """Update training cameras after they are filtered by the Schema"""
+        if len(self.train_cameras) == 0 or 1.0 not in self.train_cameras:
+            return
+            
+        all_cameras = self.train_cameras[1.0]
+        self.train_cameras[1.0] = [all_cameras[i] for i in indices]
+        del all_cameras
+        for new_idx, cam in enumerate(self.train_cameras[1.0]):
+            cam.uid = new_idx
+        self.train_idxs = list(range(0, len(indices)))
+        # self.train_idxs = np.arange(0, len(indices), 1)
