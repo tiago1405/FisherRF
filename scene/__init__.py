@@ -100,8 +100,7 @@ class Scene:
         self.gaussians.save_ply(os.path.join(point_cloud_path, "point_cloud.ply"))
 
     def getTrainCameras(self, scale=1.0):
-        filted_train_camers = [self.train_cameras[scale][i] for i in self.train_idxs]
-        return filted_train_camers
+        return self.train_cameras[scale]
 
     def getTestCameras(self, scale=1.0):
         return self.test_cameras[scale]
@@ -160,15 +159,18 @@ class Scene:
         self.train_idxs.append(idx)  # Add to current training set
         return idx
 
-    def update_training_cameras(self, indices):
-        """Update training cameras after they are filtered by the Schema"""
+    def update_cameras(self, train_indices, test_indices):
+        """Update cameras after they are filtered by the Schema"""
         if len(self.train_cameras) == 0 or 1.0 not in self.train_cameras:
             return
-            
         all_cameras = self.train_cameras[1.0]
-        self.train_cameras[1.0] = [all_cameras[i] for i in indices]
+        self.train_cameras[1.0] = [all_cameras[i] for i in train_indices]
+        self.test_cameras[1.0] = [all_cameras[i] for i in test_indices]
         del all_cameras
+        # Reset indices for Train cameras
         for new_idx, cam in enumerate(self.train_cameras[1.0]):
             cam.uid = new_idx
-        self.train_idxs = list(range(0, len(indices)))
-        # self.train_idxs = np.arange(0, len(indices), 1)
+        for new_idx, cam in enumerate(self.test_cameras[1.0]):
+            cam.uid = new_idx
+        self.train_idxs = list(range(0, len(train_indices)))
+        self.test_idxs = list(range(0, len(test_indices)))

@@ -151,6 +151,7 @@ def readColmapSceneInfo(path, images, eval, llffhold=8, override_train_idxs=None
         train_cam_infos = [c for idx, c in enumerate(cam_infos) if idx in override_train_idxs]
     else:
         if eval:
+            # Maybe add a limit to the idx here to prevent the selection of new views?
             test_cam_infos = [c for idx, c in enumerate(cam_infos) if idx % llffhold == 0]
             train_cam_infos = [c for idx, c in enumerate(cam_infos) if idx % llffhold != 0]
         else:
