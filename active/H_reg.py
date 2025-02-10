@@ -46,6 +46,7 @@ class HRegSelector(torch.nn.Module):
 
             render_pkg = modified_render(cam, gaussians, pipe, background)
             pred_img = render_pkg["render"]
+            # ** 2?
             pred_img.backward(gradient=torch.ones_like(pred_img))
 
             cur_H = torch.cat([p.grad.detach().reshape(-1) for p in params])

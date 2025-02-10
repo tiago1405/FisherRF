@@ -101,6 +101,9 @@ class Scene:
 
     def getTrainCameras(self, scale=1.0):
         return self.train_cameras[scale]
+    
+    def getTrainImageNames(self, scale=1.0):
+        return [i.image_name for i in self.train_cameras[scale]]
 
     def getTestCameras(self, scale=1.0):
         return self.test_cameras[scale]

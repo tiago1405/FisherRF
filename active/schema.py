@@ -93,7 +93,7 @@ class VNSeqMInplace(BaseSchema):
         self.init_views.extend(selected_idxs)
 
         cur_dataset_size = len(self.init_views)
-        it_base = cur_dataset_size * interval_epochs
+        it_base = cur_dataset_size * interval_epochs    
         num_views_left = N - len(self.init_views)
         
         if num_views_left > 0:

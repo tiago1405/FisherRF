@@ -53,6 +53,15 @@ def loadCam(args, id, cam_info, resolution_scale):
                   image=gt_image, gt_alpha_mask=loaded_mask,
                   image_name=cam_info.image_name, uid=id, data_device=args.data_device)
 
+def loadCamMetadata(cam_info):
+    """Load only camera position and orientation data"""
+    return {
+        'center': cam_info.T,
+        'rotation': cam_info.R,
+        'id': cam_info.uid
+    }
+
+
 def cameraList_from_camInfos(cam_infos, resolution_scale, args):
     camera_list = []
 
