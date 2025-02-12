@@ -18,6 +18,7 @@ from scene.gaussian_model import GaussianModel
 from arguments import ModelParams
 from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON, load_cam_info
 from tqdm import tqdm
+from typing import Union, List, Dict
 
 import numpy as np
 
@@ -43,6 +44,7 @@ class Scene:
 
         self.train_cameras = {}
         self.test_cameras = {}
+        self.num_cameras = 0
 
         if os.path.exists(os.path.join(args.source_path, "sparse")):
             scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.eval, 
@@ -70,6 +72,7 @@ class Scene:
         num_views = len(scene_info.train_cameras)
         self.all_train_set = set(range(num_views))
         self.train_idxs = list(range(num_views))
+        self.num_cameras = num_views + len(scene_info.test_cameras)
         if shuffle:
             # Make this determinisjtic
             random.Random(42).shuffle(self.train_idxs)
@@ -107,6 +110,9 @@ class Scene:
 
     def getTestCameras(self, scale=1.0):
         return self.test_cameras[scale]
+    
+    def getNumCameras(self):
+        return self.num_cameras
     
     def get_candidate_set(self):
         # Get candidate set 
@@ -156,24 +162,34 @@ class Scene:
         if scale not in self.train_cameras:
             raise ValueError(f"Scale {scale} not found in camera dictionary")
             
-        idx = len(self.train_cameras[scale])
+        idx = camera.uid
         self.train_cameras[scale].append(camera)
         self.all_train_set.add(idx)
         self.train_idxs.append(idx)  # Add to current training set
         return idx
 
-    def update_cameras(self, train_indices, test_indices):
+    def update_cameras(self, train_indices: Union[List, Dict], test_indices: List, scale : float = 1.0):
         """Update cameras after they are filtered by the Schema"""
-        if len(self.train_cameras) == 0 or 1.0 not in self.train_cameras:
-            return
-        all_cameras = self.train_cameras[1.0]
-        self.train_cameras[1.0] = [all_cameras[i] for i in train_indices]
-        self.test_cameras[1.0] = [all_cameras[i] for i in test_indices]
+
+        all_cameras = self.train_cameras[scale]
+
+        if isinstance(train_indices, list):
+            self.train_cameras[scale] = [all_cameras[i] for i in train_indices]
+        else:
+            matched_idx = []
+            train_names = set(train_indices.values())
+            for cam in all_cameras:
+                if cam.image_name in train_names:
+                    matched_idx.append(cam.uid)
+            self.train_cameras[scale] = [all_cameras[i] for i in matched_idx]
+        
+        # If the amount of images are over the total amount of images in the base dataset add them to the train set
+        self.test_cameras[scale] = [all_cameras[i] for i in test_indices]
         del all_cameras
         # Reset indices for Train cameras
-        for new_idx, cam in enumerate(self.train_cameras[1.0]):
+        for new_idx, cam in enumerate(self.train_cameras[scale]):
             cam.uid = new_idx
-        for new_idx, cam in enumerate(self.test_cameras[1.0]):
+        for new_idx, cam in enumerate(self.test_cameras[scale]):
             cam.uid = new_idx
         self.train_idxs = list(range(0, len(train_indices)))
         self.test_idxs = list(range(0, len(test_indices)))
